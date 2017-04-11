@@ -17,6 +17,10 @@ delayTime = 1000 * 5
 dim objCurrentTab
 dim strPrompt
 
+Set re = New RegExp
+re.Global = True  
+re.Pattern = "(\d/\s\d+/\d+)\s+(\d+)\s+"
+
 Sub main()
 
 	dim olt_name
@@ -81,32 +85,22 @@ Sub main()
 		if Instr(strResult, "40529: No related information") then 
 			'do something
 		else
-			'下面的代码功能是返回的结果进行分行
-			strLines = Split(strResult, vbcrlf)
-			
-			'下面的代码功能获取Pon口号
-			'strLines(1) = "Onu Interface    :   epon-onu_1/2/4:1"
-			str1 = Split(strLines(1), "_")
-			'str1(1) = "1/2/4:1"
-			str2 = Split(str1(1), ":")
-			'str2(0) = "1/2/4"
-			epon_num = str2(0)
-			
-			'下面的代码功能获取ONU型号
-			'strLines(2) = "Onu Model        :   ZTE-F400"
-			str1 = Split(strLines(2), ":")
-			'str1(1) = "   ZTE-F400"
-			onu_type = Trim(str1(1))
-			
-			'下面的代码功能获取ONU的mac地址符
-			'strLines(3) = "MAC Address      :   2089.8667.827c"
-			str1 = Split(strLines(3), ":")
-			'str1(1) = "   2089.8667.827c"
-			onu_mac = Trim(str1(1))
+			'使用正则表达式获取onu序号和mac地址
+			re.Pattern = "epon-onu_(\d/\d+/\d+):.+([0-9a-f]{4}\.[0-9a-f]{4}\.[0-9a-f]{4})"
+			If re.Test(strResults) <> True Then
+				MsgBox "异常错误！"
+				crt.quit
+			Else
+				Set matches = re.Execute(strResults)
+				For Each match In matches
+					epon_num = match.SubMatches(0)
+					onu_mac = match.SubMatches(1)
+				Next
+			End If
 			
 			'下面的代码的功能是通过截取命令结果分析出该 Pon 口下最后一个ONU的编号
 			objCurrentTab.Screen.Synchronous = True
-			objCurrentTab.Screen.Send "show running-config | include interface epon-onu_" & epon_num & vbcr
+			objCurrentTab.Screen.Send "show running-config interface epon-olt_" & epon_num & vbcr
 			objCurrentTab.Screen.waitForString vbcr
 			strResult = crt.Screen.ReadString(strPrompt)
 			objCurrentTab.Screen.Synchronous = false
@@ -114,17 +108,16 @@ Sub main()
 			'下面的代码功能是对返回的结果进行分行
 			strLines = Split(strResult, vbcrlf)
 			'如果当前ONU为该PON口下的第一个设备
-			if UBound(strLines) - LBound(strLines) = 0 then
+			if UBound(strLines) - LBound(strLines) = 6 then
 				last_num = 0
 			'否则获取当前该PON口下的最后一个设备的编号
 			else
 				'获取最后一行的数组索引
-				lastIndex = UBound(strLines) - 1
-				'strLines(lastIndex) = "interface epon-onu_1/2/4:13"
-				str1 = Split(strLines(lastIndex), ":")
+				lastIndex = UBound(strLines) - 3
+				'strLines(lastIndex) = "onu 2 type ZTE-F400 mac c4a3.66c7.a8ae ip-cfg static"
+				str1 = Split(strLines(lastIndex), " ")
 				'str1(1) = "13"
 				last_num = str1(1)
-			
 			end if
 			
 			'配置ONU的所有必要参数都获取到啦，接下来就调用一个Sub就OK啦
