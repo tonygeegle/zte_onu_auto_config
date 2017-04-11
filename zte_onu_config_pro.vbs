@@ -86,7 +86,7 @@ Sub main()
 			'do something
 		else
 			'使用正则表达式获取onu序号和mac地址
-			re.Pattern = "epon-onu_(\d/\d+/\d+):.+([0-9a-f]{4}\.[0-9a-f]{4}\.[0-9a-f]{4})"
+			re. = "epon-onu_(\d/\d+/\d+):.+([0-9a-f]{4}\.[0-9a-f]{4}\.[0-9a-f]{4})"
 			If re.Test(strResults) <> True Then
 				MsgBox "异常错误！"
 				crt.quit
