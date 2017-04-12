@@ -86,12 +86,12 @@ Sub main()
 			'do something
 		else
 			'使用正则表达式获取onu序号和mac地址
-			re. = "epon-onu_(\d/\d+/\d+):.+([0-9a-f]{4}\.[0-9a-f]{4}\.[0-9a-f]{4})"
-			If re.Test(strResults) <> True Then
+			re.Pattern = "epon-onu_(\d/\d+/\d+):[\s\S]*([0-9a-f]{4}\.[0-9a-f]{4}\.[0-9a-f]{4})"
+			If re.Test(strResult) <> True Then
 				MsgBox "异常错误！"
 				crt.quit
 			Else
-				Set matches = re.Execute(strResults)
+				Set matches = re.Execute(strResult)
 				For Each match In matches
 					epon_num = match.SubMatches(0)
 					onu_mac = match.SubMatches(1)
@@ -116,8 +116,8 @@ Sub main()
 				lastIndex = UBound(strLines) - 3
 				'strLines(lastIndex) = "onu 2 type ZTE-F400 mac c4a3.66c7.a8ae ip-cfg static"
 				str1 = Split(strLines(lastIndex), " ")
-				'str1(1) = "13"
-				last_num = str1(1)
+				'str1(1) = "2"
+				last_num = str1(3)
 			end if
 			
 			'配置ONU的所有必要参数都获取到啦，接下来就调用一个Sub就OK啦
